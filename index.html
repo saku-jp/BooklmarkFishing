@@ -5,6 +5,10 @@
 		<meta http-equiv="Pragma" content="no-cache">
 		<meta http-equiv="Cache-Control" content="no-cache">
 		<title>ブックマーク</title>
+		<style>
+			/* 表示サイズ */
+			.disp_size { font-size: 400%; }
+		</style>
 	</head>
 
 	<!-- データ部 -->
@@ -248,11 +252,19 @@
 	</script>
 
 	<!-- 表示部 -->
-	<body style="font-size: 400%;">
+	
+	<!-- 表示部 -->
+	<body class="disp_size">
 		<input style="font-size: 100%;" type="button" value="全て開く" id="toggleChildList_top" onclick="toggleAllChildList();" />
+		<span style="padding-left: 5%"><span>
+		<input style="font-size: 100%;" type="button" value="＋" id="doSizeUp_top" onclick="doDispResize(1);" />
+		<input style="font-size: 100%;" type="button" value="－" id="doSizeDown_top" onclick="doDispResize(-1);" />
 		<ul style="ul_top" id="bookmarkList">
 		</ul>
 		<input style="font-size: 100%;" type="button" value="全て開く" id="toggleChildList_buttom" onclick="toggleAllChildList();" />
+		<span style="padding-left: 5%"><span>
+		<input style="font-size: 100%;" type="button" value="＋" id="doSizeUp_buttom" onclick="doDispResize(1);" />
+		<input style="font-size: 100%;" type="button" value="－" id="doSizeDown_buttom" onclick="doDispResize(-1);" />
 	</body>
 
 	<!-- 処理部 -->
@@ -264,6 +276,10 @@
 		var ulCount = 0;
 		// [public]ブックマークリストの階層レベル
 		var ulLevel = 0;
+		// [public]デフォルトの表示サイズ
+		var defaultSize = 400;	
+		// [public]サイズ変更の係数
+		var resizeFac = 1.15;	
 		// GETパラメータからブックマークデータのIDを取得する
 		var param = window.location.search;
 		var bookmarkDataId = ((!isUndef(param) && (param.length > 2)) ? param.substring(1) : "bookmarkData");
@@ -284,6 +300,8 @@
 		var isShowAllChildList = false;
 		// 初期表示は全てのブックマークリストを非表示に設定する
 		toggleAllChildList();
+		// 初期表記サイズを設定する
+		doDispResize(0);
 
 		/*
 		HTML文書内のブックマークリストのデータを取得する
@@ -437,6 +455,49 @@
 			);
 			// 全てのブックマークリストの表示／非表示の状態を切り替える
 			isShowAllChildList = !isShowAllChildList;
+		}
+
+		/*
+		表示サイズを変更する
+			@param cnt 変更カウント（正の数は大きく、負の数は小さく）
+			@return なし
+		*/
+		function doDispResize(cnt) {
+			var styleSheets = document.styleSheets;
+			var dispSizeCount = readDispSizeCount() + cnt;
+			for (var i = 0; i < styleSheets.length; i++) {
+				var cssRules = styleSheets[i].cssRules;
+				for (var j = 0; j < cssRules.length; j++) {
+					if (".disp_size" == cssRules[j].selectorText) {
+						cssRules[j].style.fontSize = String(defaultSize * Math.pow(resizeFac, dispSizeCount)) + "%";
+					}
+				}
+			}
+			writeDispSizeCount(dispSizeCount);
+		}
+
+		/*
+		表示サイズカウントを読み込む(cookie)
+			@return 表示サイズカウント
+		*/
+		function readDispSizeCount() {
+			var cookies = document.cookie.split(";");
+			for (var i = 0; i < cookies.length ; i++) {
+				var kv = cookies[i].split("=");
+				if (kv[0] == "dispSizeCount") {
+					return Number(kv[1]);
+				}
+			}
+			writeDispSizeCount(0);
+			return 0;
+		}
+
+		/*
+		表示サイズカウントを書き出す(cookie)
+			@return 表示サイズカウント
+		*/
+		function writeDispSizeCount(cnt) {
+			document.cookie = "dispSizeCount=" + String(cnt) + ";expires=Tue, 19 Jan 2038 03:14:07 GMT";
 		}
 	</script>
 </html>
